@@ -1,14 +1,5 @@
 import React, { useState } from "react";
-//import "./SignUp.css";
-
-
-
-
-//import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-//import InputLabel from '@mui/material/InputLabel';
-//import FormControl from '@mui/material/FormControl';
-//import Select from '@mui/material/Select';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
@@ -32,8 +23,6 @@ const NewSignUp = () => {
         { label: "Manager", value: "manager" },
         { label: "Worker", value: "worker" },
     ];
-
-
 
     const [formData, setFormData] = useState({
         firstName: "",
