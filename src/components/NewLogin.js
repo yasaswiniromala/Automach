@@ -48,6 +48,8 @@ const NewLogin = () => {
         }
     };
 
+    
+
 
     const handleRegister = () => {
         navigate("/signup");
