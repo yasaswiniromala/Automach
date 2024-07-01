@@ -8,12 +8,15 @@ import Checkbox from '@mui/material/Checkbox';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 
+
 const NewLogin = () => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [keepMeSignedIn, setKeepMeSignedIn] = useState(false);
 
+
     const navigate = useNavigate();
+
 
     const handleChange = (event) => {
         const { name, value } = event.target;
@@ -24,15 +27,19 @@ const NewLogin = () => {
         }
     };
 
+
     const handleCheckboxChange = (e) => {
         setKeepMeSignedIn(e.target.checked);
     };
 
+
     const handleSubmit = (event) => {
         event.preventDefault();
 
+
         console.log("USERNAME: ", username);
         console.log("PASSWORD: ", password);
+
 
         if (username === "yromala" && password === "Anusha123") {
             alert("Successfully Loggedin 😀");
@@ -41,13 +48,16 @@ const NewLogin = () => {
         }
     };
 
+
     const handleRegister = () => {
         navigate("/signup");
     };
 
+
     const handleForgotPassword = () => {
         alert("Navigate to forget password page");
     };
+
 
     return (
         <div className="login-container">
@@ -115,5 +125,6 @@ const NewLogin = () => {
         </div>
     );
 };
+
 
 export default NewLogin;
