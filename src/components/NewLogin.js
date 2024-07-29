@@ -1,22 +1,18 @@
 import React, { useState } from "react";
-import imglogo from "./automachlogo.png";
 import { useNavigate } from "react-router-dom";
-import "./Login.css";
-import Box from '@mui/material/Box';
-import TextField from '@mui/material/TextField';
-import Checkbox from '@mui/material/Checkbox';
+import Snackbar from '@mui/material/Snackbar';
 import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
+import axios from 'axios';
+import "./Login.css";
 
-
-const NewLogin = () => {
+const NewLogin = ({ setIsLoggedIn, setUserDetails }) => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [keepMeSignedIn, setKeepMeSignedIn] = useState(false);
-
+    const [open, setOpen] = useState(false);
+    const [message, setMessage] = useState("");
 
     const navigate = useNavigate();
-
 
     const handleChange = (event) => {
         const { name, value } = event.target;
@@ -27,106 +23,123 @@ const NewLogin = () => {
         }
     };
 
-
     const handleCheckboxChange = (e) => {
         setKeepMeSignedIn(e.target.checked);
     };
 
-
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
 
+        try {
+            const response = await axios.post('http://localhost:8080/api/login', { email: username, password });
 
-        console.log("USERNAME: ", username);
-        console.log("PASSWORD: ", password);
-
-
-        if (username === "yromala" && password === "Anusha123") {
-            alert("Successfully Loggedin 😀");
-        } else {
-            alert("Login Failed !!! 😡");
+            if (response.status === 200) {
+                const userDetails = response.data;
+                setUserDetails(userDetails);
+                setMessage("Successfully Logged in 😀");
+                setOpen(true);
+                setIsLoggedIn(true);
+                setTimeout(() => navigate("/"), 1500); // Navigate after 1.5 seconds
+            } else {
+                setMessage("Login Failed !!! 😡");
+                setOpen(true);
+            }
+        } catch (error) {
+            setMessage("Login Failed !!! 😡");
+            setOpen(true);
         }
     };
-
-    
-
 
     const handleRegister = () => {
         navigate("/signup");
     };
 
-
     const handleForgotPassword = () => {
         alert("Navigate to forget password page");
     };
 
+    const handleClose = () => {
+        setOpen(false);
+    };
 
     return (
         <div className="login-container">
             <div className="header">
-                <img src={imglogo} alt="Icon" className="logo" />
-                <Typography variant="h4" component="h2">Welcome Back <span>👋</span></Typography>
-                <Typography variant="body1">Let’s explore the app again with us.</Typography>
+                <h2>Welcome Back <span>👋</span></h2>
+                <p>Let’s explore the app again with us.</p>
             </div>
-            <Typography variant="h5" component="h3">Login</Typography>
-            <form onSubmit={handleSubmit} className="login-form">
-                <TextField
-                    type="username"
-                    label="Username"
-                    variant="filled"
-                    name="username"
-                    value={username}
-                    onChange={handleChange}
-                    fullWidth
-                    margin="normal"
-                />
-                <TextField
-                    type="password"
-                    label="Password"
-                    variant="filled"
-                    name="password"
-                    value={password}
-                    onChange={handleChange}
-                    fullWidth
-                    margin="normal"
-                />
-                <Box display="flex" alignItems="center">
-                    <Checkbox
-                        checked={keepMeSignedIn}
-                        onChange={handleCheckboxChange}
-                        inputProps={{ 'aria-label': 'controlled' }}
+            <h2>Login</h2>
+            <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                    <label>Username:</label>
+                    <input
+                        type="text"
+                        name="username"
+                        value={username}
+                        onChange={handleChange}
                     />
-                    <Typography variant="body2">Keep Me Signed In</Typography>
-                </Box>
-                <Box display="flex" justifyContent="space-between">
-                    <Button
-                        variant="contained"
-                        type="submit"
-                        sx={{ padding: '10px 20px', m: 1, fontSize: '13px' }}
-                    >
-                        Login
-                    </Button>
-                    <Button
-                        variant="contained"
-                        onClick={handleRegister}
-                        sx={{ padding: '10px 20px', m: 1, fontSize: '13px' }}
-                        className="register-button"
-                    >
-                        Sign Up
-                    </Button>
-                </Box>
+                </div>
+                <div className="form-group">
+                    <label>Password:</label>
+                    <input
+                        type="password"
+                        name="password"
+                        value={password}
+                        onChange={handleChange}
+                    />
+                </div>
+                <div className="form-group">
+                    <label>
+                        <input
+                            type="checkbox"
+                            name="keepMeSignedIn"
+                            checked={keepMeSignedIn}
+                            onChange={handleCheckboxChange}
+                        />
+                        Keep Me Signed In
+                    </label>
+                </div>
                 <Button
-                    variant="text"
+                    type="submit"
+                    fullWidth
+                    variant="contained"
+                    color="primary"
+                    className="login-button"
+                >
+                    Login
+                </Button>
+                <br />
+                <Button
+                    type="button"
                     onClick={handleForgotPassword}
-                    sx={{ m: 1, fontSize: '13px' }}
+                    color="secondary"
                     className="forgot-password-button"
                 >
                     Forgot Password?
                 </Button>
             </form>
+            <Button
+                onClick={handleRegister}
+                color="primary"
+                className="register-button"
+            >
+                Register
+            </Button>
+
+            <Snackbar
+                open={open}
+                autoHideDuration={6000}
+                onClose={handleClose}
+                message={message}
+                
+                action={
+                    <Button color="inherit" size="small" onClick={handleClose}>
+                        Close
+                    </Button>
+                }
+            />
         </div>
     );
 };
-
 
 export default NewLogin;

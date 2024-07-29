@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import imglogo from "./automachlogo.png";
+// import imglogo from "./automachlogo.png";
 import { useNavigate } from "react-router-dom";
 import "./Login.css";
 
@@ -48,7 +48,7 @@ const Login = () => {
     return (
         <div className="login-container">
           <div className="header">
-          <img src={imglogo} alt="Icon" />
+          
 
           <h2>Welcome Back <span>👋</span></h2>
           <p>Let’s explore the app again with us.</p></div>
