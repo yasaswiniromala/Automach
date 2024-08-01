@@ -34,8 +34,8 @@ const NewLogin = ({ setIsLoggedIn, setUserDetails }) => {
             const response = await axios.post('http://localhost:8080/api/login', { email: username, password });
 
             if (response.status === 200) {
-                const userDetails = response.data;
-                setUserDetails(userDetails);
+                const userDetails = response.data; // Stores the data in userDetails and this essential to pass the user details as props 
+                setUserDetails(userDetails); // pass the userDetails to app component and it will update user details 
                 setMessage("Successfully Logged in 😀");
                 setOpen(true);
                 setIsLoggedIn(true);

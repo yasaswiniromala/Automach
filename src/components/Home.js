@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react';
+
+import { useNavigate } from "react-router-dom";
 import { Link } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
@@ -15,6 +17,7 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import WarehouseIcon from '@mui/icons-material/Warehouse';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import Container from '@mui/material/Container';
 import CancelPresentationIcon from '@mui/icons-material/CancelPresentation';
 import axios from 'axios';
@@ -39,6 +42,10 @@ const Home = ({ userDetails }) => {
   const [newProduct, setNewProduct] = useState({ prodName: '', rawMaterials: [{ materialId: '', rawMaterialQuantity: '' }] });
   const [materialOptions, setMaterialOptions] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+
+
+  const navigate = useNavigate();
+
 
   useEffect(() => {
     axios.get('http://localhost:8080/api/rawmaterials')
@@ -135,6 +142,10 @@ const Home = ({ userDetails }) => {
       });
   };
 
+  const handleProfile = () => {
+    navigate("/profile");
+  };
+
   if (loading) {
     return <Typography>Loading...</Typography>;
   }
@@ -184,10 +195,12 @@ const Home = ({ userDetails }) => {
               <ListItemIcon><InventoryIcon /></ListItemIcon>
               <ListItemText primary="Stock" />
             </ListItem>
-            <ListItem button component={Link} to="/warehouse">
-              <ListItemIcon><WarehouseIcon /></ListItemIcon>
-              <ListItemText primary="Warehouse" />
+
+            <ListItem button component={Link} to="/profile">
+              <ListItemIcon><AccountCircleIcon /></ListItemIcon>
+              <ListItemText primary="Account" />
             </ListItem>
+
           </List>
         </Box>
       </Drawer>
@@ -232,7 +245,7 @@ const Home = ({ userDetails }) => {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Product ID</TableCell>
+                    {/* <TableCell>Product ID</TableCell> */}
                     <TableCell>Product Name</TableCell>
                     <TableCell>Actions</TableCell>
                   </TableRow>
@@ -240,7 +253,7 @@ const Home = ({ userDetails }) => {
                 <TableBody>
                   {filteredProducts.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((product) => (
                     <TableRow key={product.prodId}>
-                      <TableCell>{product.prodId}</TableCell>
+                      {/* <TableCell>{product.prodId}</TableCell> */}
                       <TableCell>{product.prodName}</TableCell>
                       <TableCell>
                         <Button variant="contained" color="primary" onClick={() => fetchRawMaterials(product.prodId)}>
