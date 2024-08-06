@@ -7,6 +7,7 @@ import Home from './components/Home';
 import UserProfile from './components/UserProfile'
 import { CssBaseline, AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
 import { Link } from 'react-router-dom';
+import Stocks from './components/Stocks';
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -33,6 +34,7 @@ const App = () => {
         <Route path="/" element={isLoggedIn ? <Home userDetails={userDetails} /> : <Navigate to="/login" />} />
         <Route path="/login" element={<NewLogin setIsLoggedIn={setIsLoggedIn} setUserDetails={setUserDetails} />} />
         <Route path="/profile" element={<UserProfile userDetails={userDetails} />} />
+        <Route path="/stocks" element={<Stocks userDetails={userDetails} />} />
         <Route path="/signup" element={<NewSignUp />} />
       </Routes>
     </Router>

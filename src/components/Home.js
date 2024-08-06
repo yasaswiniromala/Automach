@@ -191,7 +191,7 @@ const Home = ({ userDetails }) => {
               <ListItemIcon><ShoppingCartIcon /></ListItemIcon>
               <ListItemText primary="Orders" />
             </ListItem>
-            <ListItem button component={Link} to="/stock">
+            <ListItem button component={Link} to="/stocks">
               <ListItemIcon><InventoryIcon /></ListItemIcon>
               <ListItemText primary="Stock" />
             </ListItem>
