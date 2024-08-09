@@ -8,6 +8,7 @@ import UserProfile from './components/UserProfile'
 import { CssBaseline, AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
 import { Link } from 'react-router-dom';
 import Stocks from './components/Stocks';
+import RawMaterialManager from './redux/RawMaterialManager';
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -27,6 +28,9 @@ const App = () => {
             <Button color="inherit" component={Link} to="/signup">Sign Up</Button>
             <Button color="inherit">About</Button>
             <Button color="inherit">Contact</Button>
+            <Button color="inherit" component={Link} to="/testredux">Redux</Button>
+           
+            
           </Box>
         </Toolbar>
       </AppBar>
@@ -36,6 +40,7 @@ const App = () => {
         <Route path="/profile" element={<UserProfile userDetails={userDetails} />} />
         <Route path="/stocks" element={<Stocks userDetails={userDetails} />} />
         <Route path="/signup" element={<NewSignUp />} />
+        <Route path="/testredux" element={<RawMaterialManager />} />
       </Routes>
     </Router>
   );

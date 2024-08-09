@@ -1,22 +1,32 @@
-import React from 'react';
-import data from "./ListData.json";
+import { createSlice } from "@reduxjs/toolkit";
 
-function List(props) {
-  const filteredData = data.filter((el) => {
-    if (props.input === '') {
-      return el;
-    } else {
-      return el.text.toLowerCase().includes(props.input);
-    }
-  });
+// Initial state
+const initialState = {
+  rawMaterials: [],
+};
 
-  return (
-    <ul>
-      {filteredData.map((item) => (
-        <li key={item.id}>{item.text}</li>
-      ))}
-    </ul>
-  );
-}
+// Slice creation
+const rawMaterialSlice = createSlice({
+  name: "rawMaterials",
+  initialState,
+  reducers: {
+    addRawMaterial: (state, action) => {
+      state.rawMaterials.push(action.payload);
+    },
+    updateRawMaterial: (state, action) => {
+      const index = state.rawMaterials.findIndex(material => material.id === action.payload.id);
+      if (index !== -1) {
+        state.rawMaterials[index] = action.payload;
+      }
+    },
+    deleteRawMaterial: (state, action) => {
+      state.rawMaterials = state.rawMaterials.filter(material => material.id !== action.payload.id);
+    },
+  },
+});
 
-export default List;
+// Exporting actions
+export const { addRawMaterial, updateRawMaterial, deleteRawMaterial } = rawMaterialSlice.actions;
+
+// Exporting reducer
+export default rawMaterialSlice.reducer;

@@ -1,83 +1,44 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import {
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, TablePagination, TextField, Button, Typography, Box, Toolbar
-} from '@mui/material';
+import { Box, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, TextField, Toolbar, Typography } from '@mui/material';
 
 const Stocks = ({ userDetails }) => {
   const [stocks, setStocks] = useState([]);
-//   const [materialMap, setMaterialMap] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-
-//   useEffect(() => {
-//     // Fetch raw materials to create a mapping of IDs to names
-//     axios.get('http://localhost:8080/api/rawmaterials')
-//       .then(response => {
-//         const materialList = response.data;
-//         const materialMap = {};
-//         materialList.forEach(material => {
-//           materialMap[material.id] = material.materialName;
-//         });
-//         setMaterialMap(materialMap);
-//       })
-//       .catch(error => {
-//         console.error('Error fetching raw materials:', error.response ? error.response.data : error.message);
-//         setError('Error fetching raw materials');
-//       });
-//   }, []);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   useEffect(() => {
-    // if (Object.keys(materialMap).length === 0) return; // Ensure materialMap is not empty
-
-    // Fetch stock data
     axios.get('http://localhost:8080/api/rawMaterialStock')
       .then(response => {
-        const stockData = response.data.map(stock => ({
-          ...stock
-        }));
-        setStocks(stockData);
-        setLoading(false);
+        setStocks(response.data);
+        console.log('Fetched Stocks:', response.data);
       })
       .catch(error => {
-        console.error('Error fetching stock data:', error.response ? error.response.data : error.message);
-        setError('Error fetching stock data');
-        setLoading(false);
+        console.error('Error fetching stocks:', error.response ? error.response.data : error.message);
       });
   }, []);
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  const handleQuantityChange = (index, event) => {
-    const { value } = event.target;
-    const actualIndex = page * rowsPerPage + index;
-    const updatedStocks = [...stocks];
-    updatedStocks[actualIndex].quantity = value;
-    setStocks(updatedStocks);
-  };
-  
   const handleUpdate = (index) => {
     const actualIndex = page * rowsPerPage + index;
     const updatedStock = stocks[actualIndex];
+
+    console.log('Actual Index:', actualIndex);
+    console.log('Updated Stock:', updatedStock);
+
+    if (!updatedStock.raw_material_stock_id) {
+      console.error('Error: updatedStock.raw_material_stock_id is undefined');
+      return;
+    }
+
     const currentTime = new Date().toISOString();
-  
     const payload = {
       ...updatedStock,
-      timeModified: currentTime,
+      dateModified: currentTime,
+      modifiedBy: userDetails
     };
 
-    console.log(payload)
-  
+    console.log('Payload:', payload);
+
     axios.put(`http://localhost:8080/api/rawMaterialStock/${updatedStock.raw_material_stock_id}`, payload)
       .then(response => {
         const updatedStocks = [...stocks];
@@ -88,23 +49,26 @@ const Stocks = ({ userDetails }) => {
         console.error('Error updating stock:', error.response ? error.response.data : error.message);
       });
   };
-  
 
-  if (loading) {
-    return <Typography>Loading...</Typography>;
-  }
+  const handleQuantityChange = (index, event) => {
+    const newStocks = [...stocks];
+    newStocks[page * rowsPerPage + index].quantity = event.target.value;
+    setStocks(newStocks);
+  };
 
-  if (error) {
-    return <Typography>{error}</Typography>;
-  }
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   return (
     <Box sx={{ display: 'flex' }}>
       <Toolbar />
-      <Box
-        component="main"
-        sx={{ flexGrow: 1, bgcolor: 'background.default', p: 3 }}
-      >
+      <Box component="main" sx={{ flexGrow: 1, bgcolor: 'background.default', p: 3 }}>
         <Typography variant="h4" component="h2" gutterBottom>
           Raw Material Stocks
         </Typography>
@@ -121,7 +85,7 @@ const Stocks = ({ userDetails }) => {
             </TableHead>
             <TableBody>
               {stocks.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((stock, index) => (
-                <TableRow key={stock.id}>
+                <TableRow key={stock.raw_material_stock_id}>
                   <TableCell>{stock.rawMaterial.materialName}</TableCell>
                   <TableCell>{stock.quantity}</TableCell>
                   <TableCell>
@@ -134,8 +98,8 @@ const Stocks = ({ userDetails }) => {
                       Update
                     </Button>
                   </TableCell>
-                  <TableCell>{stock.modifiedBy.firstName || userDetails?.firstName}</TableCell>
-                  <TableCell>{new Date(stock.timeModified || stock.dateModified).toLocaleString()}</TableCell>
+                  <TableCell>{`${stock.modifiedBy.firstName} ${stock.modifiedBy.lastName}` || `${userDetails?.firstName} ${userDetails?.lastName}`}</TableCell>
+                  <TableCell>{new Date(stock.dateModified).toLocaleString()}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-
 import { useNavigate } from "react-router-dom";
 import { Link } from 'react-router-dom';
 import Box from '@mui/material/Box';
@@ -43,9 +42,7 @@ const Home = ({ userDetails }) => {
   const [materialOptions, setMaterialOptions] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
 
-
   const navigate = useNavigate();
-
 
   useEffect(() => {
     axios.get('http://localhost:8080/api/rawmaterials')
@@ -200,7 +197,6 @@ const Home = ({ userDetails }) => {
               <ListItemIcon><AccountCircleIcon /></ListItemIcon>
               <ListItemText primary="Account" />
             </ListItem>
-
           </List>
         </Box>
       </Drawer>
@@ -245,7 +241,6 @@ const Home = ({ userDetails }) => {
               <Table>
                 <TableHead>
                   <TableRow>
-                    {/* <TableCell>Product ID</TableCell> */}
                     <TableCell>Product Name</TableCell>
                     <TableCell>Actions</TableCell>
                   </TableRow>
@@ -253,48 +248,113 @@ const Home = ({ userDetails }) => {
                 <TableBody>
                   {filteredProducts.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((product) => (
                     <TableRow key={product.prodId}>
-                      {/* <TableCell>{product.prodId}</TableCell> */}
                       <TableCell>{product.prodName}</TableCell>
                       <TableCell>
                         <Button variant="contained" color="primary" onClick={() => fetchRawMaterials(product.prodId)}>
-                          View Raw Materials
+                          View Materials
                         </Button>
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
+              <TablePagination
+                rowsPerPageOptions={[5, 10, 25]}
+                component="div"
+                count={filteredProducts.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+              />
             </TableContainer>
-            <TablePagination
-              rowsPerPageOptions={[5, 10, 25]}
-              component="div"
-              count={filteredProducts.length}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              onPageChange={handleChangePage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-            />
           </Box>
+          <Dialog open={open} onClose={handleClose}>
+            <DialogTitle>Add New Product</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                Enter product details and raw materials.
+              </DialogContentText>
+              <TextField
+                autoFocus
+                margin="dense"
+                label="Product Name"
+                type="text"
+                fullWidth
+                variant="standard"
+                value={newProduct.prodName}
+                onChange={(e) => setNewProduct({ ...newProduct, prodName: e.target.value })}
+              />
+              {newProduct.rawMaterials.map((rawMaterial, index) => (
+                <Grid container spacing={2} key={index} alignItems="center" marginBottom={2}>
+                  <Grid item xs={5}>
+                    <Autocomplete
+                      options={materialOptions}
+                      getOptionLabel={(option) => option.materialName || ''}
+                      value={materialOptions.find(option => option.id === rawMaterial.materialId) || null}
+                      onChange={(event, newValue) => {
+                        setNewProduct({
+                          ...newProduct,
+                          rawMaterials: newProduct.rawMaterials.map((item, i) =>
+                            i === index ? { ...item, materialId: newValue?.id || '' } : item
+                          )
+                        });
+                      }}
+                      renderInput={(params) => <TextField {...params} label="Material" variant="standard" />}
+                    />
+                  </Grid>
+                  <Grid item xs={5}>
+                    <TextField
+                      label="Quantity"
+                      type="number"
+                      variant="standard"
+                      fullWidth
+                      value={rawMaterial.rawMaterialQuantity}
+                      name="rawMaterialQuantity"
+                      onChange={(e) => handleInputChange(index, e)}
+                    />
+                  </Grid>
+                  <Grid item xs={2}>
+                    <IconButton color="error" onClick={() => handleRemoveRawMaterial(index)}>
+                      <CancelPresentationIcon />
+                    </IconButton>
+                  </Grid>
+                </Grid>
+              ))}
+              <Button variant="outlined" onClick={handleAddRawMaterial}>
+                Add Raw Material
+              </Button>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleClose}>Cancel</Button>
+              <Button onClick={handleAddProduct}>Add Product</Button>
+            </DialogActions>
+          </Dialog>
           {selectedProduct && (
             <Box mt={4}>
-              <Typography variant="h4" component="h2" gutterBottom>
-                Raw Materials for Product ID: {selectedProduct}
+              <Typography variant="h5" component="h2" gutterBottom>
+                Raw Materials for Product ID {selectedProduct}
               </Typography>
               <TableContainer component={Paper}>
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell>Raw Material Name</TableCell>
+                      <TableCell>Material ID</TableCell>
+                      <TableCell>Material Name</TableCell>
                       <TableCell>Quantity</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {rawMaterials.map((material) => (
-                      <TableRow key={material.id}>
-                        <TableCell>{material.rawMaterial.materialName}</TableCell>
-                        <TableCell>{material.rawMaterialQuantity}</TableCell>
-                      </TableRow>
-                    ))}
+                    {rawMaterials.map((material) => {
+                      const materialOption = materialOptions.find(option => option.id === material.id) || {};
+                      return (
+                        <TableRow key={material.id}>
+                          <TableCell>{material.id || 'N/A'}</TableCell>
+                          <TableCell>{materialOption.materialName || 'N/A'}</TableCell>
+                          <TableCell align="right">{material.rawMaterialQuantity || 'N/A'}</TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -302,69 +362,6 @@ const Home = ({ userDetails }) => {
           )}
         </Container>
       </Box>
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>Add a New Product</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            To add a new product, please enter the product name and configure the raw materials.
-          </DialogContentText>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Product Name"
-            type="text"
-            fullWidth
-            value={newProduct.prodName}
-            onChange={(e) => setNewProduct({ ...newProduct, prodName: e.target.value })}
-          />
-          <Grid container spacing={2}>
-            {newProduct.rawMaterials.map((material, index) => (
-              <React.Fragment key={index}>
-                <Grid item xs={12}>
-                  <Autocomplete
-                    options={materialOptions}
-                    getOptionLabel={(option) => option.materialName}
-                    value={materialOptions.find(option => option.id === material.materialId) || null}
-                    onChange={(event, newValue) => {
-                      const newRawMaterials = [...newProduct.rawMaterials];
-                      newRawMaterials[index].materialId = newValue ? newValue.id : '';
-                      setNewProduct({ ...newProduct, rawMaterials: newRawMaterials });
-                    }}
-                    renderInput={(params) => <TextField {...params} label="Select Raw Material" variant="outlined" />}
-                  />
-                </Grid>
-                <Grid item xs={11}>
-                  <TextField
-                    margin="dense"
-                    label="Quantity"
-                    name="rawMaterialQuantity"
-                    type="number"
-                    value={material.rawMaterialQuantity}
-                    onChange={(e) => handleInputChange(index, e)}
-                    fullWidth
-                  />
-                </Grid>
-                <Grid item xs={1}>
-                  <IconButton onClick={() => handleRemoveRawMaterial(index)}>
-                    <CancelPresentationIcon />
-                  </IconButton>
-                </Grid>
-              </React.Fragment>
-            ))}
-          </Grid>
-          <Button onClick={handleAddRawMaterial} color="primary">
-            Add Raw Material
-          </Button>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={handleAddProduct} color="primary">
-            Add Product
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 };
