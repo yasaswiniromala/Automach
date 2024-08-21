@@ -1,18 +1,29 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import Snackbar from '@mui/material/Snackbar';
 import Button from '@mui/material/Button';
 import axios from 'axios';
+import { loginSuccess, loadAuth } from "../redux/reducers/authSlice";
 import "./Login.css";
 
-const NewLogin = ({ setIsLoggedIn, setUserDetails }) => {
+const NewLogin = () => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const [keepMeSignedIn, setKeepMeSignedIn] = useState(false);
+    const [keepMeSignedIn, setKeepMeSignedIn] = useState(false); // Added state for "Keep Me Signed In"
     const [open, setOpen] = useState(false);
     const [message, setMessage] = useState("");
 
     const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const authState = useSelector((state) => state.auth);
+
+    useEffect(() => {
+        dispatch(loadAuth()); // Load authentication state on mount
+        if (authState.isLoggedIn) {
+            navigate("/"); // Navigate if already logged in
+        }
+    }, [authState.isLoggedIn, dispatch, navigate]);
 
     const handleChange = (event) => {
         const { name, value } = event.target;
@@ -29,17 +40,19 @@ const NewLogin = ({ setIsLoggedIn, setUserDetails }) => {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-
+    
         try {
             const response = await axios.post('http://localhost:8080/api/login', { email: username, password });
-
+    
             if (response.status === 200) {
-                const userDetails = response.data; // Stores the data in userDetails and this essential to pass the user details as props 
-                setUserDetails(userDetails); // pass the userDetails to app component and it will update user details 
+                const userDetails = response.data;
+
+                // Dispatch Redux action with the userDetails and keepMeSignedIn flag
+                dispatch(loginSuccess({ userDetails, keepMeSignedIn }));
+
                 setMessage("Successfully Logged in 😀");
                 setOpen(true);
-                setIsLoggedIn(true);
-                setTimeout(() => navigate("/"), 1500); // Navigate after 1.5 seconds
+                navigate("/");  // Navigate after successful login
             } else {
                 setMessage("Login Failed !!! 😡");
                 setOpen(true);

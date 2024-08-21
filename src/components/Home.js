@@ -19,6 +19,7 @@ import WarehouseIcon from '@mui/icons-material/Warehouse';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import Container from '@mui/material/Container';
 import CancelPresentationIcon from '@mui/icons-material/CancelPresentation';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import axios from 'axios';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
@@ -192,11 +193,15 @@ const Home = ({ userDetails }) => {
               <ListItemIcon><InventoryIcon /></ListItemIcon>
               <ListItemText primary="Stock" />
             </ListItem>
-
+            <ListItem button component={Link} to="/supplier">
+              <ListItemIcon><LocalShippingIcon /></ListItemIcon>
+              <ListItemText primary="Suppliers" />
+            </ListItem>
             <ListItem button component={Link} to="/profile">
               <ListItemIcon><AccountCircleIcon /></ListItemIcon>
               <ListItemText primary="Account" />
             </ListItem>
+            
           </List>
         </Box>
       </Drawer>

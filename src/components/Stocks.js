@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Box, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, TextField, Toolbar, Typography } from '@mui/material';
+import { Box, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, TextField, Toolbar, Typography, Alert } from '@mui/material';
 
 const Stocks = ({ userDetails }) => {
   const [stocks, setStocks] = useState([]);
+  const [alerts, setAlerts] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -11,7 +12,12 @@ const Stocks = ({ userDetails }) => {
     axios.get('http://localhost:8080/api/rawMaterialStock')
       .then(response => {
         setStocks(response.data);
-        console.log('Fetched Stocks:', response.data);
+
+        const lowStockAlerts = response.data
+          .filter(stock => stock.quantity < stock.minQuantity)
+          .map(stock => `Low stock alert: ${stock.rawMaterial.materialName} is below threshold with ${stock.quantity} units remaining.`);
+
+        setAlerts(lowStockAlerts);
       })
       .catch(error => {
         console.error('Error fetching stocks:', error.response ? error.response.data : error.message);
@@ -22,28 +28,33 @@ const Stocks = ({ userDetails }) => {
     const actualIndex = page * rowsPerPage + index;
     const updatedStock = stocks[actualIndex];
 
-    console.log('Actual Index:', actualIndex);
-    console.log('Updated Stock:', updatedStock);
-
     if (!updatedStock.raw_material_stock_id) {
       console.error('Error: updatedStock.raw_material_stock_id is undefined');
       return;
     }
 
     const currentTime = new Date().toISOString();
+    // console.log(userDetails);
     const payload = {
-      ...updatedStock,
+      rawMaterialId: updatedStock.rawMaterial.id,
+      quantity: updatedStock.quantity,
       dateModified: currentTime,
-      modifiedBy: userDetails
+      modifiedBy: userDetails || null,
+      minQuantity: updatedStock.minQuantity
     };
-
-    console.log('Payload:', payload);
 
     axios.put(`http://localhost:8080/api/rawMaterialStock/${updatedStock.raw_material_stock_id}`, payload)
       .then(response => {
         const updatedStocks = [...stocks];
+        // console.log(updatedStocks);
         updatedStocks[actualIndex] = response.data;
         setStocks(updatedStocks);
+
+        const newAlerts = updatedStocks
+          .filter(stock => stock.quantity < stock.minQuantity)
+          .map(stock => `Low stock alert: ${stock.rawMaterial.materialName} is below threshold with ${stock.quantity} units remaining.`);
+
+        setAlerts(newAlerts);
       })
       .catch(error => {
         console.error('Error updating stock:', error.response ? error.response.data : error.message);
@@ -52,7 +63,7 @@ const Stocks = ({ userDetails }) => {
 
   const handleQuantityChange = (index, event) => {
     const newStocks = [...stocks];
-    newStocks[page * rowsPerPage + index].quantity = event.target.value;
+    newStocks[page * rowsPerPage + index].quantity = Number(event.target.value);
     setStocks(newStocks);
   };
 
@@ -72,12 +83,24 @@ const Stocks = ({ userDetails }) => {
         <Typography variant="h4" component="h2" gutterBottom>
           Raw Material Stocks
         </Typography>
+
+        {alerts.length > 0 && (
+          <Box mb={2}>
+            {alerts.map((alert, index) => (
+              <Alert severity="warning" key={index}>
+                {alert}
+              </Alert>
+            ))}
+          </Box>
+        )}
+
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
               <TableRow>
                 <TableCell>Raw Material Name</TableCell>
                 <TableCell>Raw Material Quantity</TableCell>
+                <TableCell>Min Quantity</TableCell>
                 <TableCell>Update Quantity</TableCell>
                 <TableCell>Modified By</TableCell>
                 <TableCell>Time Modified</TableCell>
@@ -88,6 +111,7 @@ const Stocks = ({ userDetails }) => {
                 <TableRow key={stock.raw_material_stock_id}>
                   <TableCell>{stock.rawMaterial.materialName}</TableCell>
                   <TableCell>{stock.quantity}</TableCell>
+                  <TableCell>{stock.minQuantity}</TableCell>
                   <TableCell>
                     <TextField
                       type="number"
@@ -98,7 +122,7 @@ const Stocks = ({ userDetails }) => {
                       Update
                     </Button>
                   </TableCell>
-                  <TableCell>{`${stock.modifiedBy.firstName} ${stock.modifiedBy.lastName}` || `${userDetails?.firstName} ${userDetails?.lastName}`}</TableCell>
+                  <TableCell>{`${stock.modifiedBy?.firstName || userDetails?.firstName} ${stock.modifiedBy?.lastName || userDetails?.lastName}`}</TableCell>
                   <TableCell>{new Date(stock.dateModified).toLocaleString()}</TableCell>
                 </TableRow>
               ))}
