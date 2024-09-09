@@ -1,0 +1,126 @@
+/* UserProfile.css */
+
+/* Style for the container box */
+.profile-container {
+  background-color: #f9f9f9; /* Light grey background for the profile box */
+  border-radius: 8px; /* Rounded corners */
+  padding: 20px; /* Space inside the box */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+  max-width: 600px; /* Limit the width of the profile box */
+  margin: 20px auto; /* Center the box horizontally */
+}
+
+/* Style for the header */
+.profile-header {
+  color: #333; /* Dark grey color for the text */
+  font-family: 'Arial', sans-serif; /* Font for the header */
+  text-align: center; /* Center the header text */
+  margin-bottom: 20px; /* Space below the header */
+}
+
+/* Style for each piece of user detail */
+.profile-detail {
+  color: #555; /* Slightly lighter grey for the details */
+  font-family: 'Arial', sans-serif; /* Font for the details */
+  margin-bottom: 12px; /* Space below each detail */
+  display: flex; /* Use flexbox to align items */
+  justify-content: space-between; /* Space out the label and the detail */
+}
+
+/* Style for the labels in user details */
+.profile-label {
+  font-weight: bold; /* Make labels bold */
+}
+
+/* Style for the values in user details */
+.profile-value {
+  color: #000; /* Black color for the detail values */
+}
+
+
+/* UserProfile.css */
+
+/* Style for the container box */
+.profile-container {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin: 20px auto;
+}
+
+/* Style for the header */
+.profile-header {
+  color: #333;
+  font-family: 'Arial', sans-serif;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* Style for each piece of user detail */
+.profile-detail {
+  color: #555;
+  font-family: 'Arial', sans-serif;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center; /* Aligns icon and text vertically */
+}
+
+/* Style for the icons */
+.profile-icon {
+  color: #1976d2; /* Blue color for the icons */
+  margin-right: 10px; /* Space between the icon and text */
+  font-size: 24px; /* Icon size */
+}
+
+/* Style for the labels in user details */
+.profile-label {
+  font-weight: bold;
+  margin-right: 5px; /* Space between label and value */
+}
+
+/* Style for the values in user details */
+.profile-value {
+  color: #000;
+}
+
+/* UserProfile.css */
+
+/* Style for the container box */
+
+/* Style for the header */
+.profile-header {
+  color: #333;
+  font-family: 'Arial', sans-serif;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* Style for each piece of user detail */
+.profile-detail {
+  color: #555;
+  font-family: 'Arial', sans-serif;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Align items to the left */
+}
+
+/* Style for the icons */
+.profile-icon {
+  color: #1976d2; /* Blue color for the icons */
+  margin-right: 5px; /* Reduce space between the icon and text */
+  font-size: 24px; /* Icon size */
+}
+
+/* Style for the labels in user details */
+.profile-label {
+  font-weight: bold;
+  margin-right: 0px; /* No space between label and value */
+}
+
+/* Style for the values in user details */
+.profile-value {
+  color: #000;
+}

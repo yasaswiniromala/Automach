@@ -1,32 +1,44 @@
-import { createSlice } from "@reduxjs/toolkit";
+import './App.css';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import NewSignUp from './components/NewSignUp';
+import NewLogin from './components/NewLogin';
+import Home from './components/Home';
+import UserProfile from './components/UserProfile';
+import Stocks from './components/Stocks';
+import Orders from './components/Orders';
+import Supplier from './components/Supplier';
+import RawMaterialManager from './redux/RawMaterialManager';
+import { loadAuth, logout } from './redux/reducers/authSlice';
+import Layout from './components/Layout';
+import Products from './components/Products';
 
-// Initial state
-const initialState = {
-  rawMaterials: [],
+const App = () => {
+  const authState = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(loadAuth());
+  }, [dispatch]);
+
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={authState.isLoggedIn ? <Layout userDetails={authState.userDetails} /> : <Navigate to="/login" />}>
+          <Route index element={<Home userDetails={authState.userDetails} />} />
+          <Route path="profile" element={<UserProfile userDetails={authState.userDetails} />} />
+          <Route path="stocks" element={<Stocks userDetails={authState.userDetails} />} />
+          <Route path="orders" element={<Orders userDetails={authState.userDetails} />} />
+          <Route path="supplier" element={<Supplier />} />
+          <Route path="products" element={<Products />} />
+          <Route path="testredux" element={<RawMaterialManager />} />
+        </Route>
+        <Route path="/login" element={<NewLogin />} />
+        <Route path="/signup" element={<NewSignUp />} />
+      </Routes>
+    </Router>
+  );
 };
 
-// Slice creation
-const rawMaterialSlice = createSlice({
-  name: "rawMaterials",
-  initialState,
-  reducers: {
-    addRawMaterial: (state, action) => {
-      state.rawMaterials.push(action.payload);
-    },
-    updateRawMaterial: (state, action) => {
-      const index = state.rawMaterials.findIndex(material => material.id === action.payload.id);
-      if (index !== -1) {
-        state.rawMaterials[index] = action.payload;
-      }
-    },
-    deleteRawMaterial: (state, action) => {
-      state.rawMaterials = state.rawMaterials.filter(material => material.id !== action.payload.id);
-    },
-  },
-});
-
-// Exporting actions
-export const { addRawMaterial, updateRawMaterial, deleteRawMaterial } = rawMaterialSlice.actions;
-
-// Exporting reducer
-export default rawMaterialSlice.reducer;
+export default App;

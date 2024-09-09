@@ -11,8 +11,10 @@ import axios from 'axios';
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [open, setOpen] = useState(false);
+  const [suppliers, setSuppliers] = useState([]); // New state for suppliers
+
   const [newOrder, setNewOrder] = useState({
-    supplierName: '',
+    supplierName: '', // Supplier name will be selected from dropdown
     status: 'Pending', // Default status is 'Pending'
     trackingInfo: '',
     notes: '',
@@ -26,7 +28,17 @@ const Orders = () => {
   useEffect(() => {
     fetchOrders();
     dispatch(fetchRawMaterials());
+    fetchSuppliers(); // Fetch suppliers when the component loads
   }, [dispatch]);
+
+  const fetchSuppliers = async () => {
+    try {
+      const response = await axios.get('http://localhost:8080/api/suppliers');
+      setSuppliers(response.data);
+    } catch (error) {
+      console.error('Error fetching suppliers:', error);
+    }
+  };
 
   const fetchOrders = async () => {
     try {
@@ -118,64 +130,73 @@ const Orders = () => {
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Add New Order</DialogTitle>
         <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Supplier Name"
-            fullWidth
-            variant="standard"
-            value={newOrder.supplierName}
-            onChange={(e) => setNewOrder({ ...newOrder, supplierName: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Tracking Info"
-            fullWidth
-            variant="standard"
-            value={newOrder.trackingInfo}
-            onChange={(e) => setNewOrder({ ...newOrder, trackingInfo: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Notes"
-            fullWidth
-            variant="standard"
-            value={newOrder.notes}
-            onChange={(e) => setNewOrder({ ...newOrder, notes: e.target.value })}
-          />
-          <Select 
-            label="Order Status"
-            fullWidth
-            variant="standard"
-            value={newOrder.status}
-            onChange={(e) => setNewOrder({ ...newOrder, status: e.target.value })}
-            style={{ marginBottom: '20px' }}
-          >Order Status
-            <MenuItem value="Pending">Pending</MenuItem>
-            <MenuItem value="Shipped">Shipped</MenuItem>
-            <MenuItem value="Delivered">Delivered</MenuItem>
-          </Select>
-          <Autocomplete
-            options={rawMaterials}
-            getOptionLabel={(option) => option.materialName}
-            value={rawMaterials.find(material => material.id === newOrder.rawMaterialId) || null}
-            onChange={(event, newValue) => {
-              setNewOrder({ ...newOrder, rawMaterialId: newValue ? newValue.id : '' });
-            }}
-            renderInput={(params) => (
-              <TextField {...params} label="Search Raw Materials" variant="standard" />
-            )}
-          />
-          <TextField
-            margin="dense"
-            label="Raw Material Quantity"
-            fullWidth
-            variant="standard"
-            type="number"
-            value={newOrder.rawMaterialQuantity}
-            onChange={(e) => setNewOrder({ ...newOrder, rawMaterialQuantity: parseInt(e.target.value) })}
-          />
-        </DialogContent>
+  <Typography variant="body1" style={{ marginBottom: '8px' }}>
+    Supplier Name
+  </Typography>
+  <Autocomplete
+    options={suppliers}
+    getOptionLabel={(option) => option.name}
+    value={suppliers.find((supplier) => supplier.name === newOrder.supplierName) || null}
+    onChange={(event, newValue) => {
+      setNewOrder({ ...newOrder, supplierName: newValue ? newValue.name : '' });
+    }}
+    renderInput={(params) => (
+      <TextField {...params} label="Search Suppliers" variant="standard" />
+    )}
+    style={{ marginBottom: '20px' }}
+  />
+
+  {/* Other fields remain unchanged */}
+  <TextField
+    margin="dense"
+    label="Tracking Info"
+    fullWidth
+    variant="standard"
+    value={newOrder.trackingInfo}
+    onChange={(e) => setNewOrder({ ...newOrder, trackingInfo: e.target.value })}
+  />
+  <TextField
+    margin="dense"
+    label="Notes"
+    fullWidth
+    variant="standard"
+    value={newOrder.notes}
+    onChange={(e) => setNewOrder({ ...newOrder, notes: e.target.value })}
+  />
+  <Select
+    label="Order Status"
+    fullWidth
+    variant="standard"
+    value={newOrder.status}
+    onChange={(e) => setNewOrder({ ...newOrder, status: e.target.value })}
+    style={{ marginBottom: '20px' }}
+  >
+    <MenuItem value="Pending">Pending</MenuItem>
+    <MenuItem value="Shipped">Shipped</MenuItem>
+    <MenuItem value="Delivered">Delivered</MenuItem>
+  </Select>
+  <Autocomplete
+    options={rawMaterials}
+    getOptionLabel={(option) => option.materialName}
+    value={rawMaterials.find(material => material.id === newOrder.rawMaterialId) || null}
+    onChange={(event, newValue) => {
+      setNewOrder({ ...newOrder, rawMaterialId: newValue ? newValue.id : '' });
+    }}
+    renderInput={(params) => (
+      <TextField {...params} label="Search Raw Materials" variant="standard" />
+    )}
+  />
+  <TextField
+    margin="dense"
+    label="Raw Material Quantity"
+    fullWidth
+    variant="standard"
+    type="number"
+    value={newOrder.rawMaterialQuantity}
+    onChange={(e) => setNewOrder({ ...newOrder, rawMaterialQuantity: parseInt(e.target.value) })}
+  />
+</DialogContent>
+
         <DialogActions>
           <Button onClick={handleClose}>Cancel</Button>
           <Button onClick={handleAddOrder} color="primary">Add Order</Button>

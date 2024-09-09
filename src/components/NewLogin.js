@@ -77,6 +77,8 @@ const NewLogin = () => {
 
     return (
         <div className="login-container">
+        <div className="form-container">
+            <div>
             <div className="header">
                 <h2>Welcome Back <span>👋</span></h2>
                 <p>Let’s explore the app again with us.</p>
@@ -144,14 +146,18 @@ const NewLogin = () => {
                 autoHideDuration={6000}
                 onClose={handleClose}
                 message={message}
-                
                 action={
                     <Button color="inherit" size="small" onClick={handleClose}>
                         Close
                     </Button>
                 }
             />
+            </div>
         </div>
+        <div className="image-container">
+
+        </div>
+    </div>
     );
 };
 
