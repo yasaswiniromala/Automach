@@ -20,7 +20,8 @@ nav {
 /* Grid container styling */
 .grid-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Ensure 3 columns per row */
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+
     gap: 10px; /* Adjust gap for better spacing */
     padding: 20px;
     justify-items: center;
@@ -48,9 +49,10 @@ nav {
 /* Card title styling */
 .card-title {
     font-size: 18px;
-    margin-top: 10px;
-    margin-bottom: 10px;
+    margin-top: 5px;
+    margin-bottom: 5px;
     text-align: center;
+    font-weight: bold;
 }
 
 /* Hover effect for the cards */

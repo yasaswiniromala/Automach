@@ -38,8 +38,8 @@ const Home = ({ userDetails }) => {
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', bgcolor: theme.palette.background.default }}>
       <CssBaseline />
       <Container maxWidth="lg" className="container" sx={{p:0}}>
-        <Box className="home-background">
-          <Box className="home-background-content" sx={{ bgcolor: theme.palette.background.paper }}>
+        <Box className="home-background" sx={{ bgcolor: theme.palette.background.paper }}>
+          
             <Typography variant="h2" component="h1"  color={theme.palette.text.primary}>
               Automach
             </Typography>
@@ -50,7 +50,7 @@ const Home = ({ userDetails }) => {
             <Button variant="contained" className="home-button" sx={{ bgcolor: theme.palette.primary.main }}>
               Explore
             </Button>
-          </Box>
+          
         </Box>
 
         <Box mt={5}>

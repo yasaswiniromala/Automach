@@ -16,6 +16,7 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 
 const drawerWidth = 240;
 
@@ -61,13 +62,14 @@ const Layout = ({ userDetails }) => {
             <ListItemIcon><LocalShippingIcon /></ListItemIcon>
             <ListItemText primary="Suppliers" />
           </ListItem>
-          <ListItem button component={Link} to="/profile">
-            <ListItemIcon><AccountCircleIcon /></ListItemIcon>
-            <ListItemText primary="Account" />
-          </ListItem>
+          
           <ListItem button component={Link} to="/products">
               <ListItemIcon><InventoryIcon /></ListItemIcon>
               <ListItemText primary="Products" />
+            </ListItem>
+            <ListItem button component={Link} to="/chatbot">
+              <ListItemIcon><SmartToyIcon /></ListItemIcon>
+              <ListItemText primary="Chatbot" />
             </ListItem>
         </List>
       </Drawer>

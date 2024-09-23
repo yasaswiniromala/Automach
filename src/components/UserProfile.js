@@ -1,7 +1,6 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
-// Import the CSS file
-import "./UserProfile.css";
+import './UserProfile.css';
 import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
 import WorkIcon from '@mui/icons-material/Work';
@@ -58,4 +57,3 @@ const UserProfile = ({ userDetails }) => {
 };
 
 export default UserProfile;
-

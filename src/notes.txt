@@ -1,44 +1,338 @@
-import './App.css';
-import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import NewSignUp from './components/NewSignUp';
-import NewLogin from './components/NewLogin';
-import Home from './components/Home';
-import UserProfile from './components/UserProfile';
-import Stocks from './components/Stocks';
-import Orders from './components/Orders';
-import Supplier from './components/Supplier';
-import RawMaterialManager from './redux/RawMaterialManager';
-import { loadAuth, logout } from './redux/reducers/authSlice';
-import Layout from './components/Layout';
-import Products from './components/Products';
+import React, { useState, useEffect } from 'react';
+import {
+  Box, Button, TextField, Typography, Table, TableBody, TableCell,
+  TableContainer, TableHead, TableRow, Paper, Dialog, DialogTitle,
+  DialogContent, DialogActions, Autocomplete, Select, MenuItem, IconButton
+} from '@mui/material';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchRawMaterials } from '../redux/reducers/rawMaterialSlice';
+import { Edit, Delete } from '@mui/icons-material'; // Icons for edit and delete
+import axios from 'axios';
 
-const App = () => {
-  const authState = useSelector((state) => state.auth);
+const Orders = () => {
+  const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]); // New state for filtered orders
+  const [open, setOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false); // New state to manage edit mode
+  const [suppliers, setSuppliers] = useState([]);
+
+  // New states for filters
+  const [statusFilter, setStatusFilter] = useState('');
+  const [materialFilter, setMaterialFilter] = useState('');
+
+  const [newOrder, setNewOrder] = useState({
+    orderId: '', // Added orderId to the state
+    supplierName: '',
+    status: 'Pending',
+    trackingInfo: '',
+    notes: '',
+    rawMaterialId: '',
+    rawMaterialQuantity: 0,
+    createdBy: '', // New field
+    updatedBy: '', // New field
+    createdDate: '', // New field
+    updatedDate: '' // New field
+  });
+
   const dispatch = useDispatch();
+  const rawMaterials = useSelector((state) => state.rawMaterials.rawMaterials);
 
   useEffect(() => {
-    dispatch(loadAuth());
+    fetchOrders();
+    dispatch(fetchRawMaterials());
+    fetchSuppliers();
   }, [dispatch]);
 
+  const fetchSuppliers = async () => {
+    try {
+      const response = await axios.get('http://localhost:8080/api/suppliers');
+      setSuppliers(response.data);
+    } catch (error) {
+      console.error('Error fetching suppliers:', error);
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      const response = await axios.get('http://localhost:8080/api/orders');
+      setOrders(response.data);
+      setFilteredOrders(response.data); // Set filtered orders to fetched orders initially
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    }
+  };
+
+  const handleOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setEditMode(false); // Reset edit mode when closing dialog
+    setNewOrder({
+      orderId: '', // Reset orderId
+      supplierName: '',
+      status: 'Pending',
+      trackingInfo: '',
+      notes: '',
+      rawMaterialId: '',
+      rawMaterialQuantity: 0,
+      createdBy: '', // Reset field
+      updatedBy: '', // Reset field
+      createdDate: '', // Reset field
+      updatedDate: '' // Reset field
+    });
+  };
+
+  const handleAddOrder = async () => {
+    try {
+      if (!newOrder.rawMaterialId) {
+        alert('Please select a raw material.');
+        return;
+      }
+
+      const currentDate = new Date().toISOString();
+
+      const orderData = {
+        supplierName: newOrder.supplierName,
+        status: newOrder.status,
+        trackingInfo: newOrder.trackingInfo,
+        notes: newOrder.notes,
+        rawMaterial: { id: newOrder.rawMaterialId },
+        rawMaterialQuantity: newOrder.rawMaterialQuantity,
+        createdBy: newOrder.createdBy,
+        updatedBy: newOrder.updatedBy,
+        createdDate: editMode ? newOrder.createdDate : currentDate, // Keep original created date
+        updatedDate: currentDate // Set updated date to current time
+      };
+
+      const response = editMode
+        ? await axios.put(`http://localhost:8080/api/orders/${newOrder.orderId}`, orderData)
+        : await axios.post('http://localhost:8080/api/orders', orderData);
+
+      if (editMode) {
+        setOrders(orders.map((order) => (order.orderId === response.data.orderId ? response.data : order)));
+      } else {
+        setOrders([...orders, response.data]);
+      }
+
+      filterOrders(statusFilter, materialFilter); // Filter orders after adding/updating
+      handleClose();
+    } catch (error) {
+      console.error(`Error ${editMode ? 'updating' : 'adding'} order:`, error);
+      alert(`Failed to ${editMode ? 'update' : 'add'} order. Please try again.`);
+    }
+  };
+
+  const handleEditOrder = (order) => {
+    setEditMode(true);
+    setNewOrder({
+      orderId: order.orderId,
+      supplierName: order.supplierName,
+      status: order.status,
+      trackingInfo: order.trackingInfo,
+      notes: order.notes,
+      rawMaterialId: order.rawMaterial.id,
+      rawMaterialQuantity: order.rawMaterialQuantity,
+      createdBy: order.createdBy, // Preserve createdBy
+      updatedBy: '', // Reset updatedBy for new entry
+      createdDate: order.createdDate, // Preserve createdDate
+      updatedDate: '' // Reset updatedDate for new entry
+    });
+    setOpen(true);
+  };
+
+  const handleDeleteOrder = async (orderId) => {
+    try {
+      await axios.delete(`http://localhost:8080/api/orders/${orderId}`);
+      setOrders(orders.filter((order) => order.orderId !== orderId));
+      filterOrders(statusFilter, materialFilter); // Filter orders after deletion
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      alert('Failed to delete order. Please try again.');
+    }
+  };
+
+  const filterOrders = (status, material) => {
+    let filtered = orders;
+    if (status) {
+      filtered = filtered.filter((order) => order.status === status);
+    }
+    if (material) {
+      filtered = filtered.filter((order) => order.materialName === material);
+    }
+    setFilteredOrders(filtered);
+  };
+
+  useEffect(() => {
+    filterOrders(statusFilter, materialFilter);
+  }, [statusFilter, materialFilter, orders]);
+
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={authState.isLoggedIn ? <Layout userDetails={authState.userDetails} /> : <Navigate to="/login" />}>
-          <Route index element={<Home userDetails={authState.userDetails} />} />
-          <Route path="profile" element={<UserProfile userDetails={authState.userDetails} />} />
-          <Route path="stocks" element={<Stocks userDetails={authState.userDetails} />} />
-          <Route path="orders" element={<Orders userDetails={authState.userDetails} />} />
-          <Route path="supplier" element={<Supplier />} />
-          <Route path="products" element={<Products />} />
-          <Route path="testredux" element={<RawMaterialManager />} />
-        </Route>
-        <Route path="/login" element={<NewLogin />} />
-        <Route path="/signup" element={<NewSignUp />} />
-      </Routes>
-    </Router>
+    <Box p={3}>
+      <Typography variant="h4" component="h1" gutterBottom>
+        Supplier Orders
+      </Typography>
+      
+      {/* Filter Inputs */}
+      <Box display="flex" gap={2} mb={3}>
+        <Select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          displayEmpty
+          fullWidth
+          variant="outlined"
+        >
+          <MenuItem value="">All Statuses</MenuItem>
+          <MenuItem value="Pending">Pending</MenuItem>
+          <MenuItem value="Shipped">Shipped</MenuItem>
+          <MenuItem value="Delivered">Delivered</MenuItem>
+        </Select>
+
+        <Autocomplete
+          options={rawMaterials}
+          getOptionLabel={(option) => option.materialName}
+          value={rawMaterials.find(material => material.id === newOrder.rawMaterialId) || null}
+          onChange={(event, newValue) => {
+            setNewOrder({ ...newOrder, rawMaterialId: newValue ? newValue.id : '' });
+            setMaterialFilter(newValue ? newValue.materialName : ''); // Update filter as well
+          }}
+          renderInput={(params) => (
+            <TextField {...params} label="Filter by Raw Material" variant="outlined" />
+          )}
+          fullWidth
+        />
+      </Box>
+
+      <Button variant="contained" color="primary" onClick={handleOpen}>
+        Add Order
+      </Button>
+      <TableContainer component={Paper} sx={{ mt: 3 }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Supplier Name</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Tracking Info</TableCell>
+              <TableCell>Notes</TableCell>
+              <TableCell>Raw Material Name</TableCell>
+              <TableCell>Raw Material Quantity</TableCell>
+              <TableCell>Created By</TableCell> {/* New column */}
+              <TableCell>Created Date</TableCell> {/* New column */}
+              <TableCell>Updated By</TableCell> {/* New column */}
+              <TableCell>Updated Date</TableCell> {/* New column */}
+              <TableCell>Actions</TableCell> {/* New column for actions */}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredOrders.map((order) => (
+              <TableRow key={order.orderId}>
+                <TableCell>{order.supplierName}</TableCell>
+                <TableCell>{order.status}</TableCell>
+                <TableCell>{order.trackingInfo}</TableCell>
+                <TableCell>{order.notes}</TableCell>
+                <TableCell>{order.materialName}</TableCell>
+                <TableCell>{order.rawMaterialQuantity}</TableCell>
+                <TableCell>{order.createdBy}</TableCell> {/* Display createdBy */}
+                <TableCell>{order.createdDate}</TableCell> {/* Display createdDate */}
+                <TableCell>{order.updatedBy}</TableCell> {/* Display updatedBy */}
+                <TableCell>{order.updatedDate}</TableCell> {/* Display updatedDate */}
+                <TableCell>
+                  <IconButton onClick={() => handleEditOrder(order)}>
+                    <Edit />
+                  </IconButton>
+                  <IconButton onClick={() => handleDeleteOrder(order.orderId)}>
+                    <Delete />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <Dialog open={open} onClose={handleClose}>
+        <DialogTitle>{editMode ? 'Edit Order' : 'Add Order'}</DialogTitle>
+        <DialogContent>
+          <Autocomplete
+            options={suppliers}
+            getOptionLabel={(option) => option.supplierName}
+            value={suppliers.find(supplier => supplier.supplierName === newOrder.supplierName) || null}
+            onChange={(event, newValue) => setNewOrder({ ...newOrder, supplierName: newValue ? newValue.supplierName : '' })}
+            renderInput={(params) => (
+              <TextField {...params} label="Supplier Name" variant="outlined" margin="dense" fullWidth />
+            )}
+          />
+          <Select
+            value={newOrder.status}
+            onChange={(e) => setNewOrder({ ...newOrder, status: e.target.value })}
+            fullWidth
+            variant="outlined"
+            margin="dense"
+          >
+            <MenuItem value="Pending">Pending</MenuItem>
+            <MenuItem value="Shipped">Shipped</MenuItem>
+            <MenuItem value="Delivered">Delivered</MenuItem>
+          </Select>
+          <TextField
+            label="Tracking Info"
+            value={newOrder.trackingInfo}
+            onChange={(e) => setNewOrder({ ...newOrder, trackingInfo: e.target.value })}
+            variant="outlined"
+            margin="dense"
+            fullWidth
+          />
+          <TextField
+            label="Notes"
+            value={newOrder.notes}
+            onChange={(e) => setNewOrder({ ...newOrder, notes: e.target.value })}
+            variant="outlined"
+            margin="dense"
+            fullWidth
+          />
+          <Autocomplete
+            options={rawMaterials}
+            getOptionLabel={(option) => option.materialName}
+            value={rawMaterials.find(material => material.id === newOrder.rawMaterialId) || null}
+            onChange={(event, newValue) => setNewOrder({ ...newOrder, rawMaterialId: newValue ? newValue.id : '' })}
+            renderInput={(params) => (
+              <TextField {...params} label="Raw Material" variant="outlined" margin="dense" fullWidth />
+            )}
+          />
+          <TextField
+            label="Quantity"
+            type="number"
+            value={newOrder.rawMaterialQuantity}
+            onChange={(e) => setNewOrder({ ...newOrder, rawMaterialQuantity: parseInt(e.target.value, 10) })}
+            variant="outlined"
+            margin="dense"
+            fullWidth
+          />
+          <TextField
+            label="Created By"
+            value={newOrder.createdBy}
+            onChange={(e) => setNewOrder({ ...newOrder, createdBy: e.target.value })}
+            variant="outlined"
+            margin="dense"
+            fullWidth
+          />
+          {/* <TextField
+            label="Updated By"
+            value={newOrder.updatedBy}
+            onChange={(e) => setNewOrder({ ...newOrder, updatedBy: e.target.value })}
+            variant="outlined"
+            margin="dense"
+            fullWidth
+          /> */}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="secondary">Cancel</Button>
+          <Button onClick={handleAddOrder} color="primary">{editMode ? 'Update' : 'Add'}</Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 };
 
-export default App;
+export default Orders;
+

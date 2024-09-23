@@ -3,7 +3,8 @@ import axios from 'axios';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, TablePagination, Button, Dialog, DialogActions, DialogContent,
-  DialogContentText, DialogTitle, TextField, IconButton, Grid, Autocomplete, Chip, Typography
+  DialogContentText, DialogTitle, TextField, IconButton,MenuItem, Select,
+ Grid, Autocomplete, Chip, Typography,useTheme
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CancelPresentationIcon from '@mui/icons-material/CancelPresentation';
@@ -16,6 +17,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 
 const Products = () => {
+  const theme = useTheme();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -26,14 +28,42 @@ const Products = () => {
   const [open, setOpen] = useState(false);
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);
+  const [categoryFilter, setCategoryFilter] = useState(null);
+  const [tagFilter, setTagFilter] = useState([]);
+  const [sortColumn, setSortColumn] = useState(null);
+const [sortDirection, setSortDirection] = useState('asc');
+const [sortedProducts, setSortedProducts] = useState([...products]);
+
   const [newProduct, setNewProduct] = useState({
     prodName: '',
     category: null,
+    price: '', // Added price attribute
     tags: [],
     rawMaterials: [{ materialId: '', rawMaterialQuantity: '' }]
   });
   const [materialOptions, setMaterialOptions] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSort = (column) => {
+    const isAsc = sortColumn === column && sortDirection === 'asc';
+    const newDirection = isAsc ? 'desc' : 'asc';
+    setSortColumn(column);
+    setSortDirection(newDirection);
+  
+    const sorted = [...products].sort((a, b) => {
+      const aValue = a[column] || ''; // Handle cases where the value may be null or undefined
+      const bValue = b[column] || '';
+  
+      if (newDirection === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+  
+    setSortedProducts(sorted);
+  };
+  
 
   useEffect(() => {
     axios.get('http://localhost:8080/api/rawmaterials')
@@ -46,11 +76,25 @@ const Products = () => {
       });
   }, []);
 
+  // useEffect(() => {
+  //   axios.get('http://localhost:8080/api/products')
+  //     .then(response => {
+  //       setProducts(response.data);
+  //       setLoading(false);
+  //     })
+  //     .catch(error => {
+  //       console.error('There was an error fetching the products!', error);
+  //       setError('Error fetching products');
+  //       setLoading(false);
+  //     });
+  // }, []);
+
   useEffect(() => {
     axios.get('http://localhost:8080/api/products')
       .then(response => {
         setProducts(response.data);
         setLoading(false);
+        setSortedProducts(response.data); // Also set sortedProducts here
       })
       .catch(error => {
         console.error('There was an error fetching the products!', error);
@@ -58,6 +102,7 @@ const Products = () => {
         setLoading(false);
       });
   }, []);
+  
 
   useEffect(() => {
     axios.get('http://localhost:8080/api/categories')
@@ -111,6 +156,8 @@ const Products = () => {
     });
   };
 
+ 
+ 
   const handleAddRawMaterial = () => {
     setNewProduct({ ...newProduct, rawMaterials: [...newProduct.rawMaterials, { materialId: '', rawMaterialQuantity: '' }] });
   };
@@ -140,6 +187,7 @@ const Products = () => {
       product: {
         prodName: newProduct.prodName,
         category: newProduct.category,
+        price: newProduct.price, // Include price in payload
         tags: newProduct.tags.map(tag => ({ id: tag.id }))
       },
       rawMaterialQuantities: rawMaterialQuantities
@@ -163,9 +211,42 @@ const Products = () => {
     return <Typography>{error}</Typography>;
   }
 
-  const filteredProducts = products.filter(product =>
-    product.prodName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // const filteredProducts = products.filter(product =>
+  //   product.prodName.toLowerCase().includes(searchQuery.toLowerCase())
+  // );
+  // const filteredProducts = products.filter(product => {
+  //   const categoryMatch = filteredCategory ? product.category?.id === filteredCategory.id : true;
+  //   const tagsMatch = filteredTags.length > 0 ? filteredTags.every(tag => product.tags.some(pTag => pTag.id === tag.id)) : true;
+  //   return product.prodName.toLowerCase().includes(searchQuery.toLowerCase()) && categoryMatch && tagsMatch;
+  // });
+  const handleCategoryFilterChange = (event) => {
+    setCategoryFilter(event.target.value);
+  };
+
+  const handleTagFilterChange = (event, newValue) => {
+    setTagFilter(newValue);
+  };
+
+  const getTagColor = (tag) => {
+    const key = tag.name.toLowerCase();
+    const tagColorMap = {};
+
+    if (Object.keys(tagColorMap).indexOf(key) === -1) {
+      const randomColor = ['#ADD8E6', '#FFB6C1', '#90EE90'][Math.floor(Math.random() * 3)];
+      tagColorMap[key] = randomColor;
+    }
+
+    return tagColorMap[key];
+  }
+
+  const filteredProducts = products.filter(product => {
+    return (
+      (!categoryFilter || (product.category && product.category.id === categoryFilter.id)) &&
+      (tagFilter.length === 0 || tagFilter.every(tag => product.tags.some(productTag => productTag.id === tag.id))) &&
+      product.prodName.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
+
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -191,6 +272,50 @@ const Products = () => {
           onChange={(e) => setSearchQuery(e.target.value)}
           sx={{ mb: 3 }}
         />
+        {/* <Autocomplete
+            options={categories}
+            getOptionLabel={(option) => option.name}
+            value={filteredCategory}
+            onChange={(event, newValue) => setFilteredCategory(newValue)}
+            renderInput={(params) => <TextField {...params} label="Filter by Category" />}
+            sx={{ mb: 2 }}
+          />
+          <Autocomplete
+            multiple
+            options={tags}
+            getOptionLabel={(option) => option.name}
+            value={filteredTags}
+            onChange={(event, newValue) => setFilteredTags(newValue)}
+            renderInput={(params) => <TextField {...params} label="Filter by Tags" />}
+            sx={{ mb: 2 }}
+          /> */}
+          <Grid item xs={4}>
+              <Select
+                fullWidth
+                value={categoryFilter || ''}
+                onChange={handleCategoryFilterChange}
+                displayEmpty
+              >
+                <MenuItem value="">
+                  <em>All Categories</em>
+                </MenuItem>
+                {categories.map((category) => (
+                  <MenuItem key={category.id} value={category}>
+                    {category.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </Grid>
+            <Grid item xs={4} >
+              <Autocomplete
+                multiple
+                options={tags}
+                getOptionLabel={(option) => option.name}
+                value={tagFilter}
+                onChange={handleTagFilterChange}
+                renderInput={(params) => <TextField {...params} label="Filter by Tags" />}
+              />
+            </Grid>
         <Button variant="contained" color="primary" startIcon={<AddIcon />} onClick={handleClickOpen}>
           Add New Product
         </Button>
@@ -209,6 +334,14 @@ const Products = () => {
               value={newProduct.prodName}
               onChange={(e) => setNewProduct({ ...newProduct, prodName: e.target.value })}
             />
+              <TextField
+                margin="dense"
+                label="Price"
+                type="number"
+                fullWidth
+                value={newProduct.price}
+                onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
+              />
             <Autocomplete
               options={categories}
               getOptionLabel={(option) => option.name}
@@ -230,21 +363,21 @@ const Products = () => {
               renderInput={(params) => <TextField {...params} label="Tags" />}
               sx={{ mt: 2 }}
             />
-            {newProduct.rawMaterials.map((material, index) => (
-              <Grid container spacing={2} key={index}>
-                <Grid item xs={6}>
-                  <Autocomplete
-                    options={materialOptions}
-                    getOptionLabel={(option) => option.materialName}
-                    value={materialOptions.find(opt => opt.materialId === material.materialId) || null}
-                    onChange={(event, newValue) => {
-                      const newRawMaterials = [...newProduct.rawMaterials];
-                      newRawMaterials[index].materialId = newValue ? newValue.materialId : '';
-                      setNewProduct({ ...newProduct, rawMaterials: newRawMaterials });
-                    }}
-                    renderInput={(params) => <TextField {...params} label="Raw Material" margin="normal" />}
-                  />
-                </Grid>
+           {newProduct.rawMaterials.map((material, index) => (
+                <Grid container spacing={2} key={index}>
+                  <Grid item xs={6}>
+                    <Autocomplete
+                      options={materialOptions}
+                      getOptionLabel={(option) => option.materialName}
+                      value={materialOptions.find(opt => opt.materialId === material.materialId) || null}
+                      onChange={(event, newValue) => {
+                        const newRawMaterials = [...newProduct.rawMaterials];
+                        newRawMaterials[index].materialId = newValue ? newValue.materialId : '';
+                        setNewProduct({ ...newProduct, rawMaterials: newRawMaterials });
+                      }}
+                      renderInput={(params) => <TextField {...params} label="Raw Material" margin="normal" />}
+                    />
+                  </Grid>
                 <Grid item xs={4}>
                   <TextField
                     label="Quantity"
@@ -271,76 +404,88 @@ const Products = () => {
             <Button onClick={handleAddProduct} color="primary">Add Product</Button>
           </DialogActions>
         </Dialog>
-        <TableContainer component={Paper} sx={{ mt: 3 }}>
-          <Table>
-            <TableHead>
-              <TableRow>
-            
-                <TableCell>Product Name</TableCell>
-                <TableCell>Category</TableCell>
-                <TableCell>Tags</TableCell>
-                <TableCell align="right">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredProducts.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((product) => (
-                <TableRow key={product.prodId} hover>
-                  
-                  <TableCell>{product.prodName}</TableCell>
-                  <TableCell>{product.category?.name || 'N/A'}</TableCell>
-                  <TableCell>
-                    {product.tags.map((tag) => (
-                      <Chip key={tag.id} label={tag.name} sx={{ mr: 1 }} />
-                    ))}
-                  </TableCell>
-                  <TableCell align="right">
-                    <Button variant="contained" color="primary" onClick={() => fetchRawMaterials(product.prodId)}>
-                      View Raw Materials
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={filteredProducts.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-          />
-        </TableContainer>
-        {selectedProduct && (
-          <>
-            <Typography variant="h6" component="h4" mt={4} gutterBottom>
-              Raw Materials for Selected Product
-            </Typography>
-            <TableContainer component={Paper} sx={{ mt: 3 }}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Raw Material ID</TableCell>
-                    <TableCell>Raw Material Name</TableCell>
-                    <TableCell align="right">Quantity</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {rawMaterials.map((material) => {
-                    return (
-                      <TableRow key={material.id}>
-                        <TableCell>{material.rawMaterial.id || 'N/A'}</TableCell>
-                        <TableCell>{material.rawMaterial.materialName || 'N/A'}</TableCell>
-                        <TableCell align="right">{material.rawMaterialQuantity || 'N/A'}</TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </>
-        )}
+        <TableContainer component={Paper} sx={{ mt: 3, border: '1px solid #ccc' }}>
+  <Table>
+    <TableHead 
+    sx={{
+      backgroundColor: theme.palette.mode === 'light' ? '#f0f0f0' : theme.palette.background.default,
+      fontWeight: 'bold',
+    }}>
+      <TableRow sx={{ bgcolor: theme.palette.background.main, fontWeight: 'bold' }}>
+        <TableCell onClick={() => handleSort('prodName')} sx={{ cursor: 'pointer' }}>Product Name</TableCell>
+        <TableCell onClick={() => handleSort('price')} sx={{ cursor: 'pointer' }}>Price</TableCell>
+        <TableCell>Tags</TableCell>
+        <TableCell>Category</TableCell>
+        <TableCell>Actions</TableCell>
+      </TableRow>
+    </TableHead>
+    <TableBody>
+      {sortedProducts.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((product) => (
+        <TableRow key={product.prodId} hover sx={{ borderBottom: '1px solid #ddd' }}>
+          <TableCell>{product.prodName}</TableCell>
+          <TableCell>${product.price}</TableCell>
+          <TableCell>
+            {product.tags.map((tag) => {
+              const randomColor = getTagColor(tag);
+              return <Chip key={tag.id} label={tag.name} sx={{ mr: 1, backgroundColor: randomColor, textTransform: 'capitalize' }} />;
+            })}
+          </TableCell>
+          <TableCell>{product.category?.name || 'N/A'}</TableCell>
+          <TableCell>
+            <Button variant="outlined" color="secondary" onClick={() => fetchRawMaterials(product.prodId)}>
+              View Raw Materials
+            </Button>
+          </TableCell>
+        </TableRow>
+      ))}
+    </TableBody>
+  </Table>
+  <TablePagination
+  sx={{
+    '& .MuiPaginationItem-root': {
+      fontSize: '1.2rem', // Increases font size
+      color: '#1976d2', // Changes color to blue
+    }
+  }}
+  
+    rowsPerPageOptions={[5, 10, 25]}
+    component="div"
+    count={sortedProducts.length}
+    rowsPerPage={rowsPerPage}
+    page={page}
+    onPageChange={handleChangePage}
+    onRowsPerPageChange={handleChangeRowsPerPage}
+  />
+</TableContainer>
+{selectedProduct && (
+  <>
+    <Typography variant="h6" component="h4" mt={4} gutterBottom>
+      Raw Materials for Selected Product
+    </Typography>
+    <TableContainer component={Paper} sx={{ mt: 3, border: '1px solid #ccc' }}>
+      <Table>
+        <TableHead>
+          <TableRow sx={{ backgroundColor: '#f0f0f0' }}>
+            {/* <TableCell>Raw Material ID</TableCell> */}
+            <TableCell>Raw Material Name</TableCell>
+            <TableCell align="right">Quantity</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {rawMaterials.map((material) => (
+            <TableRow key={material.id} sx={{ borderBottom: '1px solid #ddd' }}>
+              {/* <TableCell>{material.rawMaterial.id || 'N/A'}</TableCell> */}
+              <TableCell>{material.rawMaterial.materialName || 'N/A'}</TableCell>
+              <TableCell align="right">{material.rawMaterialQuantity || 'N/A'}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  </>
+)}
+
+       
       </Container>
     </Box>
   </Box>
