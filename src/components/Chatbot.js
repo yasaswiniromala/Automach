@@ -1,39 +1,121 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Box, Button, TextField, Typography, Paper, CircularProgress } from '@mui/material';
 import { fetchChatbotResponse } from './chatbotFetching'; // Import the fetching function
+import axios from 'axios';
 
 const Chatbot = ({ userDetails }) => {
   const [userMessage, setUserMessage] = useState('');
-  const [chatHistory, setChatHistory] = useState([]);
+  const [chatHistory, setChatHistory] = useState([
+    { bot: `Hello, ${userDetails?.firstName} ${userDetails?.lastName}, how can I assist you today?` },
+  ]);
   const [loading, setLoading] = useState(false); // Loading state
   const [error, setError] = useState(null); // Error state
   const [typing, setTyping] = useState(false); // Typing indicator state
 
-  // Show welcome message on component mount
-  useEffect(() => {
-    if (userDetails) {
-      const welcomeMessage = `Hello, ${userDetails.firstName} ${userDetails.lastName}, how can I assist you today?`;
-      setChatHistory([{ bot: welcomeMessage }]);
-    }
-  }, [userDetails]);
+  // Function to handle API calls based on URL
+  const handleApiCall = async (url, queryContext = {}) => {
+    try {
+      let response;
 
-  // Function to handle sending user messages
+      // Use switch-case to handle different URL patterns
+      switch (true) {
+        // Raw Materials
+        case url === 'http://localhost:8080/api/rawmaterials':
+          response = await axios.get(url);
+          return response.data.map((material) => material.materialName || 'Unknown').join(', ');
+
+        case url.includes('/api/rawMaterialStock/material/'):
+          // Extract the material name from the URL
+          const materialName = url.split('/').pop();
+
+          // Make the API call
+          response = await axios.get(url);
+
+          // Check the user's query to determine whether it's for 'min quantity' or 'current quantity'
+          const queryLower = queryContext.query.toLowerCase();
+
+          if (queryLower.includes('min quantity')) {
+            return `Material: ${response.data.rawMaterial.materialName}, Min Quantity: ${response.data.minQuantity}`;
+          } else if (queryLower.includes('current quantity')) {
+            return `Material: ${response.data.rawMaterial.materialName}, Current Quantity: ${response.data.quantity}`;
+          } else {
+            // If no specific quantity type is requested, return both
+            return `Material: ${response.data.rawMaterial.materialName}, Min Quantity: ${response.data.minQuantity}, Current Quantity: ${response.data.quantity}`;
+          }
+
+        // Suppliers
+        case url === 'http://localhost:8080/api/suppliers':
+          // Fetch the list of suppliers
+          response = await axios.get(url);
+          return response.data.map((supplier) => supplier.name || 'Unknown').join(', ');
+
+        case url.includes('/api/suppliers/supplierName/'):
+          // Extract the supplier name from the URL
+          const supplierName = url.split('/').pop();
+
+          // Fetch supplier details by name
+          response = await axios.get(url);
+
+          // Check if user is asking for a specific supplier's address
+          if (queryContext.query.toLowerCase().includes('address')) {
+            return `Supplier: ${response.data.name}, Address: ${response.data.addressLine1}, ${response.data.addressLine2}, ${response.data.city}, ${response.data.state}, ${response.data.postalCode}`;
+          } else {
+            // Return general details if no specific field is asked
+            return `Supplier: ${response.data.name}, Email: ${response.data.email}, Phone: ${response.data.phone}`;
+          }
+
+        default:
+          // If the URL doesn't match any of the cases, return an error message
+          return 'No valid API URL provided.';
+      }
+    } catch (error) {
+      console.error(`Error fetching data from ${url}:`, error);
+      return 'Sorry, there was an issue fetching the data. Please try again later.';
+    }
+  };
+
   const handleSendMessage = async () => {
-    if (!userMessage) return; // Don't send an empty message
+    if (!userMessage) return;
 
     setLoading(true);
-    setTyping(true); // Show typing indicator
-    setError(null); // Reset error
+    setTyping(true);
+    setError(null);
 
     try {
-      const response = await fetchChatbotResponse(userMessage); // Get response from OpenAI
-      setChatHistory([...chatHistory, { user: userMessage, bot: response }]); // Update chat history
+      const response = await fetchChatbotResponse(userMessage);
+      console.log('Chatbot response:', response);
+
+      // Extract URL from the chatbot response (more robust regex to handle URL within axios.get())
+      const urlMatch = response.match(/axios\.get\('([^']+)'\)/);
+      const url = urlMatch ? urlMatch[1] : null;
+
+      // Extract raw material name or supplier name from the user's query (fallback to 'wood' for raw materials)
+      const rawMaterialMatch = userMessage.match(/quantity of ([a-zA-Z]+)/i);
+      const rawMaterial = rawMaterialMatch ? rawMaterialMatch[1].toLowerCase() : 'wood'; // Default to 'wood'
+
+      // Extract supplier name from user's query (if applicable)
+      const supplierMatch = userMessage.match(/address of ([a-zA-Z\s]+)/i);
+      const supplierName = supplierMatch ? supplierMatch[1].toLowerCase() : null;
+
+      const queryContext = {
+        rawMaterial: rawMaterial,
+        supplierName: supplierName,
+        query: userMessage.toLowerCase(),
+      };
+
+      if (url) {
+        const apiData = await handleApiCall(url, queryContext);
+        setChatHistory([...chatHistory, { user: userMessage, bot: `Fetched data: ${apiData}` }]);
+      } else {
+        setChatHistory([...chatHistory, { user: userMessage, bot: response }]);
+      }
     } catch (err) {
-      setError('Something went wrong. Please try again.'); // Set error message
+      console.error('Error sending message:', err);
+      setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
-      setTyping(false); // Hide typing indicator
-      setUserMessage(''); // Clear input field
+      setTyping(false);
+      setUserMessage('');
     }
   };
 

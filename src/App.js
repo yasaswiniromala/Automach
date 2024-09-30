@@ -199,7 +199,8 @@ const App = () => {
             <Route path="orders" element={<Orders userDetails={authState.userDetails} />} />
             <Route path="sales" element={<Sales userDetails={authState.userDetails} />} />
             <Route path="supplier" element={<Supplier />} />
-            <Route path="chatbot" element={<Chatbot />} />
+           
+            <Route path="chatbot" element={<Chatbot userDetails={authState.userDetails} />} />
             <Route path="products" element={<Products />} />
             <Route path="testredux" element={<RawMaterialManager />} />
           </Route>
@@ -207,7 +208,7 @@ const App = () => {
           {/* Login and Signup Routes */}
           <Route path="/login" element={<NewLogin />} />
           <Route path="/signup" element={<NewSignUp />} />
-          <Route path="chatbot" element={<Chatbot userDetails={authState.userDetails} />} />
+         
 
         </Routes>
 

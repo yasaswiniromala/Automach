@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, 
-  TablePagination, IconButton, Dialog, DialogActions, DialogContent, Select,MenuItem,
-  DialogTitle, Button, TextField,useTheme,Chip,InputLabel, FormControl, OutlinedInput
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
+  TablePagination, IconButton, Dialog, DialogActions, DialogContent, Select, MenuItem,
+  DialogTitle, Button, TextField, useTheme, Chip, InputLabel, FormControl, OutlinedInput
 } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
-import dayjs from "dayjs"; 
+import dayjs from "dayjs";
 
 const Sales = ({ userDetails }) => {
   const theme = useTheme();
@@ -14,7 +14,7 @@ const Sales = ({ userDetails }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [editSale, setEditSale] = useState(null);
-  const [products, setProducts] = useState([]); 
+  const [products, setProducts] = useState([]);
   const [openAdd, setOpenAdd] = useState(false); // Separate state for Add dialog
   const [openEdit, setOpenEdit] = useState(false); // Separate state for Edit dialog
   const [formData, setFormData] = useState({
@@ -33,7 +33,7 @@ const Sales = ({ userDetails }) => {
     quantities: "",
     discountPercent: "",
     orderStatus: "",
-    orderCreatedDate: "",
+    orderCreatedDate: new Date(),
     createdUserId: "",
     orderDeliveryDate: "",
   });
@@ -51,7 +51,7 @@ const Sales = ({ userDetails }) => {
       .catch(error => console.error('Error fetching products:', error));
   }, []);
 
-  
+
   // Handle delete
   const handleDelete = (id) => {
     axios.delete(`http://localhost:8080/api/sales/${id}`)
@@ -142,7 +142,7 @@ const Sales = ({ userDetails }) => {
       createdUserId: Number(newSale.createdUserId),
       orderDeliveryDate: newSale.orderDeliveryDate,
     };
-    
+
 
     axios.post("http://localhost:8080/api/sales", saleData)
       .then(() => {
@@ -158,48 +158,34 @@ const Sales = ({ userDetails }) => {
 
   return (
     <Paper>
-      <h1 sx={{ml:3}} >Sales Orders</h1>
-      <Button variant="contained" sx={{ml:3}} color="primary" onClick={handleClickOpenAdd}>
+      <h1 sx={{ ml: 3 }} >Sales Orders</h1>
+      <Button variant="contained" sx={{ ml: 3 }} color="primary" onClick={handleClickOpenAdd}>
         Add New Order
       </Button>
-      
+
       {/* Dialog for adding new order */}
-      <Dialog open={openAdd} onClose={handleCloseAdd}>
-        <DialogTitle>Add New Order</DialogTitle>
-        <DialogContent>
-          <TextField
-            margin="dense"
-            label="Customer Name"
-            name="customerName"
-            fullWidth
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            label="Order Decision"
-            name="orderDecision"
-            fullWidth
-            onChange={handleInputChange}
-          />
+      
+        
+         
           {/* Dialog for adding new order */}
-      <Dialog open={openAdd} onClose={handleCloseAdd}>
-        <DialogTitle>Add New Order</DialogTitle>
-        <DialogContent>
-          <TextField
-            margin="dense"
-            label="Customer Name"
-            name="customerName"
-            fullWidth
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            label="Order Decision"
-            name="orderDecision"
-            fullWidth
-            onChange={handleInputChange}
-          />
-          {/* <TextField
+          <Dialog open={openAdd} onClose={handleCloseAdd}>
+            <DialogTitle>Add New Order</DialogTitle>
+            <DialogContent>
+              <TextField
+                margin="dense"
+                label="Customer Name"
+                name="customerName"
+                fullWidth
+                onChange={handleInputChange}
+              />
+              <TextField
+                margin="dense"
+                label="Order Decision"
+                name="orderDecision"
+                fullWidth
+                onChange={handleInputChange}
+              />
+              {/* <TextField
             margin="dense"
             label="Product IDs (comma-separated)"
             name="productIds"
@@ -207,142 +193,96 @@ const Sales = ({ userDetails }) => {
             onChange={handleInputChange}
           /> */}
 
-          {/* Multi-select for Product Names */}
-<FormControl fullWidth>
-  <InputLabel>Product Names</InputLabel>
-  <Select
-    multiple
-    name="productIds"
-    value={newSale.productIds}
-    onChange={(e) => setNewSale({
-      ...newSale,
-      productIds: e.target.value
-    })}
-    input={<OutlinedInput label="Product Names" />}
-    renderValue={(selected) => selected.map(id => {
-      const product = products.find(p => p.prodId === id);
-      return product ? product.prodName : id;
-    }).join(', ')}
-  >
-    {products.map((product) => (
-      <MenuItem key={product.prodId} value={product.prodId}>
-        {product.prodName}
-      </MenuItem>
-    ))}
-  </Select>
-</FormControl>
+              {/* Multi-select for Product Names */}
+              <FormControl fullWidth>
+                <InputLabel>Product Names</InputLabel>
+                <Select
+                  multiple
+                  name="productIds"
+                  value={newSale.productIds}
+                  onChange={(e) => setNewSale({
+                    ...newSale,
+                    productIds: e.target.value
+                  })}
+                  input={<OutlinedInput label="Product Names" />}
+                  renderValue={(selected) => selected.map(id => {
+                    const product = products.find(p => p.prodId === id);
+                    return product ? product.prodName : id;
+                  }).join(', ')}
+                >
+                  {products.map((product) => (
+                    <MenuItem key={product.prodId} value={product.prodId}>
+                      {product.prodName}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-          <TextField
-            margin="dense"
-            label="Quantities (comma-separated)"
-            name="quantities"
-            fullWidth
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            label="Discount Percent"
-            name="discountPercent"
-            fullWidth
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            label="Order Status"
-            name="orderStatus"
-            fullWidth
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            label="Order Created Date (YYYY-MM-DDTHH:MM:SS)"
-            name="orderCreatedDate"
-            fullWidth
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            label="Created User ID"
-            name="createdUserId"
-            fullWidth
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            label="Order Delivery Date (YYYY-MM-DDTHH:MM:SS)"
-            name="orderDeliveryDate"
-            fullWidth
-            onChange={handleInputChange}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseAdd} color="secondary">
-            Cancel
-          </Button>
-          <Button onClick={handleAddOrder} color="primary">
-            Add Order
-          </Button>
-        </DialogActions>
-      </Dialog>
-      
-          <TextField
-            margin="dense"
-            label="Quantities (comma-separated)"
-            name="quantities"
-            fullWidth
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            label="Discount Percent"
-            name="discountPercent"
-            fullWidth
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            label="Order Status"
-            name="orderStatus"
-            fullWidth
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            label="Order Created Date (YYYY-MM-DDTHH:MM:SS)"
-            name="orderCreatedDate"
-            fullWidth
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            label="Created User ID"
-            name="createdUserId"
-            fullWidth
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            label="Order Delivery Date (YYYY-MM-DDTHH:MM:SS)"
-            name="orderDeliveryDate"
-            fullWidth
-            onChange={handleInputChange}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseAdd} color="secondary">
-            Cancel
-          </Button>
-          <Button onClick={handleAddOrder} color="primary">
-            Add Order
-          </Button>
-        </DialogActions>
-      </Dialog>
-      
+              <TextField
+                margin="dense"
+                label="Quantities (comma-separated)"
+                name="quantities"
+                fullWidth
+                onChange={handleInputChange}
+              />
+              <TextField
+                margin="dense"
+                label="Discount Percent"
+                name="discountPercent"
+                fullWidth
+                onChange={handleInputChange}
+              />
+              <TextField
+                margin="dense"
+                label="Order Status"
+                name="orderStatus"
+                fullWidth
+                onChange={handleInputChange}
+              />
+              <TextField
+                margin="dense"
+                // label="Order Created Date (YYYY-MM-DDTHH:MM:SS)"
+                name="orderCreatedDate"
+                disabled
+                value={new Date()}
+                fullWidth
+                onChange={handleInputChange}
+              />
+              <TextField
+                margin="dense"
+                label="Created User ID"
+                name="createdUserId"
+                fullWidth
+                onChange={handleInputChange}
+              />
+              <TextField
+                margin="dense"
+                label="Order Delivery Date (YYYY-MM-DDTHH:MM:SS)"
+                name="orderDeliveryDate"
+                fullWidth
+                onChange={handleInputChange}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleCloseAdd} color="secondary">
+                Cancel
+              </Button>
+              <Button onClick={handleAddOrder} color="primary">
+                Add Order
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          
+     
+
       <TableContainer>
-        <Table sx={{ border: '1px solid grey',mt:3,ml:3}}>
-          <TableHead   sx={{ backgroundColor: theme.palette.mode === 'light' ? '#f0f0f0' : theme.palette.background.default,
-      fontWeight: 'bold',}}>
-            <TableRow sx={{ bgcolor: theme.palette.background.main, fontWeight: 'bold'}}>
+        <Table sx={{ border: '1px solid grey', mt: 3, ml: 3 }}>
+          <TableHead sx={{
+            backgroundColor: theme.palette.mode === 'light' ? '#f0f0f0' : theme.palette.background.default,
+            fontWeight: 'bold',
+          }}>
+            <TableRow sx={{ bgcolor: theme.palette.background.main, fontWeight: 'bold' }}>
               <TableCell>Customer Name</TableCell>
               <TableCell>Order Decision</TableCell>
               <TableCell>Product Name</TableCell>
@@ -364,18 +304,18 @@ const Sales = ({ userDetails }) => {
                 <TableCell>{sale.customerName}</TableCell>
                 {/* <TableCell>{sale.orderDecision}</TableCell> */}
                 <TableCell>
-  <Chip
-    label={sale.orderDecision}
-    color={
-      sale.orderDecision === 'confirmed'
-        ? 'success'
-        : sale.orderDecision === 'quoted'
-        ? 'warning'
-        : 'default'
-    }
-    variant="outlined"
-  />
-</TableCell>
+                  <Chip
+                    label={sale.orderDecision}
+                    color={
+                      sale.orderDecision === 'confirmed'
+                        ? 'success'
+                        : sale.orderDecision === 'quoted'
+                          ? 'warning'
+                          : 'default'
+                    }
+                    variant="outlined"
+                  />
+                </TableCell>
 
                 <TableCell>
                   {sale.products.map((product) => (
@@ -388,25 +328,25 @@ const Sales = ({ userDetails }) => {
                 <TableCell>{sale.finalPrice}</TableCell>
                 {/* <TableCell>{sale.orderStatus}</TableCell> */}
                 <TableCell>
-                
-  <Chip
-    label={sale.orderStatus}
-    color={
-      sale.orderStatus === 'pending'
-        ? 'warning'   // Use warning for pending
-        : sale.orderStatus === 'shipped'
-        ? 'success'   // Use success for shipped
-        : sale.orderStatus === 'Delivered'
-        ? 'error'     // Use error for delivered
-        : 'default'   // Default color for other statuses
-    }
-    variant="outlined"
-  />
-</TableCell>
+
+                  <Chip
+                    label={sale.orderStatus}
+                    color={
+                      sale.orderStatus === 'pending'
+                        ? 'warning'   // Use warning for pending
+                        : sale.orderStatus === 'shipped'
+                          ? 'success'   // Use success for shipped
+                          : sale.orderStatus === 'Delivered'
+                            ? 'error'     // Use error for delivered
+                            : 'default'   // Default color for other statuses
+                    }
+                    variant="outlined"
+                  />
+                </TableCell>
 
 
-<TableCell>
-                    {dayjs(sale.orderCreatedDate).format("YYYY-MM-DD HH:mm:ss")}
+                <TableCell>
+                    {dayjs(sale.orderCreatedDate).format("YYYY-MM-DD hh:mm:ss A")}
                   </TableCell>
                   <TableCell>
                     {dayjs(sale.orderDeliveryDate).format("YYYY-MM-DD HH:mm:ss")}
@@ -417,24 +357,24 @@ const Sales = ({ userDetails }) => {
                   {/* <IconButton onClick={() => handleEdit(sale)}>
                     <Edit />
                   </IconButton> */}
-      <Button
-  variant="outlined"
-  color="primary"
-  onClick={() => handleEdit(sale)}
-  sx={{ mb: 2 }}  // Adds margin to the right
-  startIcon={<Edit />}
->
-  Edit
-</Button>
-                  
-                  <Button 
-    variant="outlined" 
-    color="error" 
-    onClick={() =>handleDelete(sale.saleId)}
-    startIcon={<Delete />} // Adds the Delete icon inside the button
-  >
-    Delete
-    </Button>
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    onClick={() => handleEdit(sale)}
+                    sx={{ mb: 2 }}  // Adds margin to the right
+                    startIcon={<Edit />}
+                  >
+                    Edit
+                  </Button>
+
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    onClick={() => handleDelete(sale.saleId)}
+                    startIcon={<Delete />} // Adds the Delete icon inside the button
+                  >
+                    Delete
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -503,7 +443,7 @@ const Sales = ({ userDetails }) => {
             fullWidth
           
           /> */}
-            <Select
+          <Select
             fullWidth
             value={formData.orderStatus}
             onChange={handleChange}
